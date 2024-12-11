@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TaskController;
+use App\Models\Task;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -8,8 +10,18 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+
+    $tasks = Task::where('user_id', auth()
+                    ->user()->id)
+                    ->orderBy('created_at', 'DESC')
+                    ->get();
+    return view('dashboard', ['tasks' => $tasks]);
+
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::resource('tasks', TaskController::class)->middleware(['auth','verified']);
+
+Route::get('tasks/{id}/accomplish', [TaskController::class, 'markTaskAccomplish'])->middleware(['auth','verified'])->name('tasks.accomplish');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
